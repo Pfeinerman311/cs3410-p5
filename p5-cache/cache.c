@@ -27,16 +27,27 @@ cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t pro
   // - for each element in the array, malloc another array with n_col
   // FIX THIS CODE!
 
-  cache->lines = NULL;
-  cache->lru_way = NULL;
+  cache->lines = 
+	  (cache_line_t **) malloc((cache->n_set) * sizeof(cache_line_t *));
+  	for (int i = 0; i < (cache->n_set); i++) {
+		(cache->lines)[i] = malloc(assoc * sizeof(cache_line_t));
+	}
+
+
+
+
+  cache->lru_way = malloc((cache->n_set) * sizeof(int));
 
   // initializes cache tags to 0, dirty bits to false,
   // state to INVALID, and LRU bits to 0
   // FIX THIS CODE!
-  for (int i = 0; i < 1; i++) {
-    for (int j = 0; j < 1; j++) {
-      // body goes here
+  for (int i = 0; i < (cache->n_set); i++) {
+    for (int j = 0; j < assoc; j++) {
+      (cache->lines[i][j]).tag = 0;
+      (cache->lines[i][j]).dirty_f = 0;
+      (cache->lines[i][j]).state = INVALID;
     }
+    cache->lru_way[i] = 0;
   }
 
   return cache;
