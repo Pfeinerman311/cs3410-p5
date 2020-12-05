@@ -55,17 +55,17 @@ cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t pro
 
 unsigned long get_cache_tag(cache_t *cache, unsigned long addr) {
   // FIX THIS CODE!
-  return 0;
+  return addr >> (32 - (cache->n_tag_bit));
 }
 
 unsigned long get_cache_index(cache_t *cache, unsigned long addr) {
   // FIX THIS CODE!
-  return 0;
+  return (addr >> cache->n_offset_bit) & ~(~0 << cache->n_index_bit);
 }
 
 unsigned long get_cache_block_addr(cache_t *cache, unsigned long addr) {
   // FIX THIS CODE!
-  return 0;
+  return (addr >> (cache->n_offset_bit)) << (cache->n_offset_bit);
 }
 
 
