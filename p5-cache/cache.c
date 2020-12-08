@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "cache.h"
+#include "cache_stats.h"
 #include "print_helpers.h"
 
 cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t protocol){
@@ -28,7 +29,7 @@ cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t pro
   // FIX THIS CODE!
 
   cache->lines = 
-	  (cache_line_t **) malloc((cache->n_set) * sizeof(cache_line_t *));
+	(cache_line_t **) malloc((cache->n_set) * sizeof(cache_line_t *));
   	for (int i = 0; i < (cache->n_set); i++) {
 		(cache->lines)[i] = malloc(assoc * sizeof(cache_line_t));
 	}
@@ -79,7 +80,20 @@ unsigned long get_cache_block_addr(cache_t *cache, unsigned long addr) {
  */
 bool access_cache(cache_t *cache, unsigned long addr, enum action_t action) {
   // FIX THIS CODE!
-
-
-  return true;  // cache hit should return true
+  unsigned long tag = get_cache_tag(cache, addr);
+  unsigned long index = get_cache_index(cache, addr);
+  for(int a = 0; a < cache->assoc; a++) {
+	  if(tag == cache->lines[index][a].tag) {
+		  if (action == STORE) {
+			  cache->lines[index][a].dirty_f = 1;
+			  cache->lines[index][a].state = VALID;
+		  }
+		  return true;
+	  }
+  }
+  cache->lines[index][cache->lru_way[index]].tag = tag;
+  if (action == STORE) {
+	  cache->lines[index][cache->lru_way[index]].dirty_f = 1;
+  }
+  return false;
 }
