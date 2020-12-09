@@ -29,15 +29,12 @@ cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t pro
   // FIX THIS CODE!
 
   cache->lines = 
-	(cache_line_t **) malloc((cache->n_set) * sizeof(cache_line_t *));
-  	for (int i = 0; i < (cache->n_set); i++) {
-		(cache->lines)[i] = malloc(assoc * sizeof(cache_line_t));
-	}
+	  (cache_line_t **) malloc((cache->n_set) * sizeof(cache_line_t *));                                                                                                                            for (int i = 0; i < (cache->n_set); i++) {                                                                                                                                                            (cache->lines)[i] = malloc(assoc * sizeof(cache_line_t));                                                                                                                             }
 
 
 
 
-  cache->lru_way = malloc((cache->n_set) * sizeof(int));
+  cache->lru_way = (int *)malloc((cache->n_set) * sizeof(int));
 
   // initializes cache tags to 0, dirty bits to false,
   // state to INVALID, and LRU bits to 0
@@ -93,7 +90,7 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action) {
   }
   cache->lines[index][cache->lru_way[index]].tag = tag;
   if (action == STORE) {
-	  cache->lines[index][cache->lru_way[index]].dirty_f = 1;
+	 cache->lines[index][cache->lru_way[index]].dirty_f = 1;
   }
   return false;
 }
