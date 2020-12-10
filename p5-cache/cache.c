@@ -30,22 +30,14 @@ cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t pro
   // - for each element in the array, malloc another array with n_col
   // FIX THIS CODE!
 
-<<<<<<< HEAD
   cache->lines =
       malloc((cache->n_set) * sizeof(cache_line_t *));
   for (int i = 0; i < (cache->n_set); i++)
   {
     (cache->lines)[i] = malloc(assoc * sizeof(cache_line_t));
   }
-=======
-  cache->lines = 
-	  (cache_line_t **) malloc((cache->n_set) * sizeof(cache_line_t *));                                                                                                                            for (int i = 0; i < (cache->n_set); i++) {                                                                                                                                                            (cache->lines)[i] = malloc(assoc * sizeof(cache_line_t));                                                                                                                             }
 
-
-
->>>>>>> 2865638da67994de9e4021a78ca15ba954bdedad
-
-  cache->lru_way = (int *)malloc((cache->n_set) * sizeof(int));
+  cache->lru_way = malloc((cache->n_set) * sizeof(int));
 
   // initializes cache tags to 0, dirty bits to false,
   // state to INVALID, and LRU bits to 0
@@ -82,6 +74,20 @@ unsigned long get_cache_block_addr(cache_t *cache, unsigned long addr)
   return (addr >> (cache->n_offset_bit)) << (cache->n_offset_bit);
 }
 
+
+void update_lru(cache_t *cache, int the_set, int touched_way) {
+	if (cache->assoc == 1) {
+		return;
+	}
+	if (touched_way < (cache->assoc -1)) {
+		cache->lru_way[the_set] = touched_way + 1;
+	}
+	else {
+		cache->lru_way[the_set] = 0;
+	}
+}
+
+
 /* this method takes a cache, an address, and an action
  * it proceses the cache access. functionality in no particular order: 
  *   - look up the address in the cache, determine if hit or miss
@@ -104,20 +110,22 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
         cache->lines[index][a].dirty_f = 1;
         cache->lines[index][a].state = VALID;
       }
+      update_lru(cache, index, a);
       update_stats(cache->stats, true, false, false, action);
       return true;
     }
   }
   cache->lines[index][cache->lru_way[index]].tag = tag;
-<<<<<<< HEAD
   if (action == STORE)
   {
     cache->lines[index][cache->lru_way[index]].dirty_f = 1;
-=======
-  if (action == STORE) {
-	 cache->lines[index][cache->lru_way[index]].dirty_f = 1;
->>>>>>> 2865638da67994de9e4021a78ca15ba954bdedad
+    cache->lines[index][cache->lru_way[index]].state = VALID;
   }
+  else 
+  {
+    cache->lines[index][cache->lru_way[index]].dirty_f = 0;
+  }
+  update_lru(cache, index, cache->lru_way[index]);
   update_stats(cache->stats, false, false, false, action);
   return false;
 }
