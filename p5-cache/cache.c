@@ -114,14 +114,15 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
       }
       else
       {
-        cache->lines[index][cache->lru_way[index]].dirty_f = 0;
+        //cache->lines[index][cache->lru_way[index]].dirty_f = 0;
       }
       update_lru(cache, index, a);
-      update_stats(cache->stats, true, cache->lines[index][a].dirty_f, false, action);
+      update_stats(cache->stats, true, false, false, action);
       return true;
     }
   }
   cache->lines[index][cache->lru_way[index]].tag = tag;
+  update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
   if (action == STORE)
   {
     cache->lines[index][cache->lru_way[index]].dirty_f = 1;
@@ -132,6 +133,6 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
     cache->lines[index][cache->lru_way[index]].dirty_f = 0;
   }
   update_lru(cache, index, cache->lru_way[index]);
-  update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
+  //update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
   return false;
 }
