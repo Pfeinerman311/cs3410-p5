@@ -41,7 +41,16 @@ cache_stats_t *make_cache_stats()
 void update_stats(cache_stats_t *stats, bool hit_f, bool dirty_evic_f, bool upgrade_miss_f, enum action_t action)
 {
   if (hit_f)
-    stats->total_hits++;
+  {
+	  if (action == LOAD || action == STORE)
+	  {
+		  stats->total_hits++;
+	  }
+	  else
+	  {
+		  stats->total_snoop_hits++;
+	  }
+  }
 
   if (action == STORE)
     stats->total_stores++;
@@ -52,7 +61,10 @@ void update_stats(cache_stats_t *stats, bool hit_f, bool dirty_evic_f, bool upgr
   if (upgrade_miss_f)
     stats->total_upgrade_miss++;
 
-  stats->total_cpu_accesses++;
+  if (action == LOAD || action == STORE)
+	  stats->total_cpu_accesses++;
+  else
+	  stats->total_bus_snoops++;
 }
 
 // could do this in the previous method, but that's a lot of extra divides...

@@ -103,36 +103,46 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
   // FIX THIS CODE!
   unsigned long tag = get_cache_tag(cache, addr);
   unsigned long index = get_cache_index(cache, addr);
-  for (int a = 0; a < cache->assoc; a++)
+  for (int a = 0; a < cache->assoc; a++) //Loop checking for tag matches
   {
     if (tag == cache->lines[index][a].tag)
     {
-      if (action == STORE)
+      if (action == LD_MISS && action == ST_MISS) //When there is a tag match but action is a snoop 
       {
-        cache->lines[index][a].dirty_f = 1;
-        cache->lines[index][a].state = VALID;
-      }
-      else
+	     update_stats(cache->stats, true, false, false, action);
+      } 
+      else //When there is a tag match but action isn't a snoop
       {
-        //cache->lines[index][cache->lru_way[index]].dirty_f = 0;
+      	if (action == STORE)
+      	{
+        	cache->lines[index][a].dirty_f = 1;
+        	cache->lines[index][a].state = VALID;
+      	}
+      	update_lru(cache, index, a);
+      	update_stats(cache->stats, true, false, false, action);
       }
-      update_lru(cache, index, a);
-      update_stats(cache->stats, true, false, false, action);
       return true;
     }
   }
-  cache->lines[index][cache->lru_way[index]].tag = tag;
-  update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
-  if (action == STORE)
+  if (action == LD_MISS || action == ST_MISS) //Full cache is checked but no tag match, action is a snoop
   {
-    cache->lines[index][cache->lru_way[index]].dirty_f = 1;
-    cache->lines[index][cache->lru_way[index]].state = VALID;
+	  update_stats(cache->stats, false, false, false, action);
   }
-  else
+  else //Full cache is checked but no tag match, action isn't a snoop
   {
-    cache->lines[index][cache->lru_way[index]].dirty_f = 0;
+  	cache->lines[index][cache->lru_way[index]].tag = tag;
+  	update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
+  	if (action == STORE || action == ST_MISS)
+  	{
+    	cache->lines[index][cache->lru_way[index]].dirty_f = 1;
+    	cache->lines[index][cache->lru_way[index]].state = VALID;
+  	}
+  	else
+  	{
+    	cache->lines[index][cache->lru_way[index]].dirty_f = 0;
+    	//cache->lines[index][cache->lru_way[index]].state = VALID;
+  	}
+  	update_lru(cache, index, cache->lru_way[index]);
   }
-  update_lru(cache, index, cache->lru_way[index]);
-  //update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
   return false;
 }
