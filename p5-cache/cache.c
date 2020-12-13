@@ -14,7 +14,8 @@ cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t pro
 
   cache->capacity = capacity;     // in Bytes
   cache->block_size = block_size; // in Bytes
-  cache->assoc = assoc;           // 1, 2, 3... etc.
+  cache->assoc = assoc;           // 1, 2, 3... etc.<F12>
+  cache->protocol = protocol;
 
   // FIX THIS CODE!
   // first, correctly set these 5 variables. THEY ARE ALL WRONG
