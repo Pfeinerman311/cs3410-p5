@@ -15,6 +15,7 @@ cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t pro
   cache->capacity = capacity;     // in Bytes
   cache->block_size = block_size; // in Bytes
   cache->assoc = assoc;           // 1, 2, 3... etc.
+  cache->protocol = protocol;
 
   // FIX THIS CODE!
   // first, correctly set these 5 variables. THEY ARE ALL WRONG
@@ -107,40 +108,79 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
   {
     if (tag == cache->lines[index][a].tag)
     {
-      if (action == LD_MISS && action == ST_MISS) //When there is a tag match but action is a snoop
+      if (action == LD_MISS || action == ST_MISS) //When there is a tag match but action is a snoop
       {
-        update_stats(cache->stats, true, false, false, action);
+        if (cache->protocol == NONE)
+        {
+          update_stats(cache->stats, true, false, false, action);
+        }
+        else if (cache->protocol == VI)
+        {
+          update_stats(cache->stats, cache->lines[index][a].state == VALID, false, false, action);
+          cache->lines[index][a].state = INVALID;
+        }
       }
       else //When there is a tag match but action isn't a snoop
       {
+        update_stats(cache->stats, true, cache->lines[index][a].dirty_f, false, action);
         if (action == STORE)
         {
-          cache->lines[index][a].dirty_f = 1;
-          cache->lines[index][a].state = VALID;
+          if (cache->protocol == NONE)
+          {
+            cache->lines[index][a].dirty_f = 1;
+            cache->lines[index][a].state = VALID;
+          }
+          else if (cache->protocol == VI)
+          {
+            cache->lines[index][a].dirty_f = 1;
+            cache->lines[index][a].state = VALID;
+          }
         }
         update_lru(cache, index, a);
-        update_stats(cache->stats, true, false, false, action);
       }
       return true;
     }
   }
   if (action == LD_MISS || action == ST_MISS) //Full cache is checked but no tag match, action is a snoop
   {
-    update_stats(cache->stats, false, false, false, action);
+    if (cache->protocol == NONE)
+    {
+      update_stats(cache->stats, false, false, false, action);
+    }
+    else if (cache->protocol == VI)
+    {
+      update_stats(cache->stats, false, false, false, action);
+      cache->lines[index][cache->lru_way[index]].state = INVALID;
+    }
   }
   else //Full cache is checked but no tag match, action isn't a snoop
   {
     cache->lines[index][cache->lru_way[index]].tag = tag;
     update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
-    if (action == STORE || action == ST_MISS)
+    if (action == STORE)
     {
-      cache->lines[index][cache->lru_way[index]].dirty_f = 1;
-      cache->lines[index][cache->lru_way[index]].state = VALID;
+      if (cache->protocol == NONE)
+      {
+        cache->lines[index][cache->lru_way[index]].dirty_f = 1;
+        cache->lines[index][cache->lru_way[index]].state = VALID;
+      }
+      else if (cache->protocol == VI)
+      {
+        cache->lines[index][cache->lru_way[index]].dirty_f = 1;
+        cache->lines[index][cache->lru_way[index]].state = VALID;
+      }
     }
-    else
+    else if (action == LOAD)
     {
-      cache->lines[index][cache->lru_way[index]].dirty_f = 0;
-      //cache->lines[index][cache->lru_way[index]].state = VALID;
+      if (cache->protocol == NONE)
+      {
+        cache->lines[index][cache->lru_way[index]].dirty_f = 0;
+      }
+      else if (cache->protocol == VI)
+      {
+        cache->lines[index][cache->lru_way[index]].dirty_f = 0;
+        cache->lines[index][cache->lru_way[index]].state = VALID;
+      }
     }
     update_lru(cache, index, cache->lru_way[index]);
   }
