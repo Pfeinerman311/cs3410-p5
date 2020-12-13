@@ -104,10 +104,12 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
   // FIX THIS CODE!
   unsigned long tag = get_cache_tag(cache, addr);
   unsigned long index = get_cache_index(cache, addr);
+  log_set(index);
   for (int a = 0; a < cache->assoc; a++) //Loop checking for tag matches
   {
     if (tag == cache->lines[index][a].tag)
     {
+      log_way(a);
       if (action == LD_MISS || action == ST_MISS) //When there is a tag match but action is a snoop
       {
         if (cache->protocol == NONE)
@@ -122,7 +124,7 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
       }
       else //When there is a tag match but action isn't a snoop
       {
-        update_stats(cache->stats, true, cache->lines[index][a].dirty_f, false, action);
+        //update_stats(cache->stats, true, cache->lines[index][a].dirty_f, false, action);
         if (action == STORE)
         {
           if (cache->protocol == NONE)
@@ -137,10 +139,12 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
           }
         }
         update_lru(cache, index, a);
+	update_stats(cache->stats, true, false, false, action);
       }
       return true;
     }
   }
+  log_way(cache->lru_way[index]);
   if (action == LD_MISS || action == ST_MISS) //Full cache is checked but no tag match, action is a snoop
   {
     if (cache->protocol == NONE)
