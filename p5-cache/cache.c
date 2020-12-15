@@ -133,6 +133,7 @@ bool vi_access (cache_t *cache, unsigned long addr, enum action_t action)
       }
     }
   }
+  }
   bool dirty_evict = cache->lines[index][cache->lru_way[index]].dirty_f;
   if (cache->lines[index][cache->lru_way[index]].state == INVALID){  //No tag match, state is INVALID
     if (action == ST_MISS || action == LD_MISS) {
