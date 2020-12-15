@@ -138,7 +138,7 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
           upd_cache (cache, tag, index, cache->lru_way[index], action, true, SHARED, false);
         }
         else if (action == STORE || action == LOAD) { //STATE is MODIFIED, ACTION is STORE or LOAD
-          upd_cache (cache, tag, index, a, action, false, SHARED, false);
+          upd_cache (cache, tag, index, a, action, false, MODIFIED, false);
         }
       }
       else { //Tag match, state is SHARED
