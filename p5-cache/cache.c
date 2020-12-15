@@ -286,7 +286,6 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
       }
     }
   }
-  else {
     log_way(cache->lru_way[index]);
     if (cache->lines[index][a].state == INVALID){  //No tag match, state is INVALID
       if (action == ST_MISS || action == LD_MISS) {
@@ -321,7 +320,6 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
         upd_cache (cache, index, cache->lru_way[index], action, false, SHARED, false);
       }
     }
-  }
 }
 
 
@@ -329,7 +327,7 @@ void upd_cache (cache_t *cache, unsigned long index, int touched_way, enum actio
 {
   log_way(touched_way);
   if (!hit_f && (action == STORE || action || LOAD)) {
-    cache->lines[index][touched_way].tag = tag;
+    //cache->lines[index][touched_way].tag = tag;
     update_stats(cache->stats, hit_f, cache->lines[index][cache->lru_way[index]].dirty_f, upgr_miss_f, action);
   }
   else update_stats(cache->stats, hit_f, false, upgr_miss_f, action);
