@@ -95,7 +95,7 @@ bool upd_cache (cache_t *cache, unsigned long tag, unsigned long index, int touc
   enum state_t new_state, bool hit_f, bool dirty_evict, bool upgr_miss_f)
 {
   log_way(touched_way);
-  if (!hit_f) {
+  if (!hit_f && (action == STORE || action == LOAD)) {
 	  cache->lines[index][touched_way].tag = tag;
   }
   update_stats(cache->stats, hit_f, dirty_evict, upgr_miss_f, action);
