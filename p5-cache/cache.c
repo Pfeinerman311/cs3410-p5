@@ -104,8 +104,8 @@ bool upd_cache (cache_t *cache, unsigned long tag, unsigned long index, int touc
     cache->lines[index][touched_way].dirty_f = 1;
     update_lru(cache, index, touched_way);
   }
-  else if (action == LOAD && !hit_f){
-    cache->lines[index][touched_way].dirty_f = 0;
+  else if (action == LOAD){
+    if (!hit_f) cache->lines[index][touched_way].dirty_f = 0;
     update_lru(cache, index, touched_way);
   }
   return hit_f;
