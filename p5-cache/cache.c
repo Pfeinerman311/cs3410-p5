@@ -166,7 +166,7 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
       if (cache->protocol == NONE)
       {
         cache->lines[index][cache->lru_way[index]].dirty_f = 1;
-        cache->lines[index][cache->lru_way[index]].state = VALID;
+        //cache->lines[index][cache->lru_way[index]].state = VALID;
       }
       else if (cache->protocol == VI)
       {
