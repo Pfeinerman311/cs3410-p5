@@ -91,26 +91,23 @@ void update_lru(cache_t *cache, int the_set, int touched_way)
   }
 }
 
-bool upd_cache (cache_t *cache, unsigned long tag, unsigned long index, int touched_way, enum action_t action, bool hit_f, enum state_t new_state, bool upgr_miss_f)
+bool upd_cache (cache_t *cache, unsigned long tag, unsigned long index, int touched_way, enum action_t action, 
+  enum state_t new_state, bool hit_f, bool dirty_evict, bool upgr_miss_f)
 {
   log_way(touched_way);
-  if (!hit_f && (action == STORE || action || LOAD)) {
-    cache->lines[index][touched_way].tag = tag;
-    update_stats(cache->stats, hit_f, cache->lines[index][cache->lru_way[index]].dirty_f, upgr_miss_f, action);
-  }
-  else {
-	  update_stats(cache->stats, hit_f, false, upgr_miss_f, action);
-  }
+  if (!hit_f && action || LOAD) cache->lines[index][touched_way].tag = tag;
+	update_stats(cache->stats, hit_f, false, upgr_miss_f, action);
   cache->lines[index][touched_way].state = new_state;
   if (action == STORE) {
-    cache->lines[index][touched_way].dirty_f = 1;  
+    cache->lines[index][touched_way].dirty_f = 1;
+    update_lru(cache, index, touched_way);
   }
-  if (action == STORE || action == LOAD){
+  else if (action == LOAD){
+    cache->lines[index][touched_way].dirty_f = 0;
     update_lru(cache, index, touched_way);
   }
   return hit_f;
 }
-
 
 bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
 {
@@ -121,71 +118,90 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
     if (tag == cache->lines[index][a].tag) {
       if (cache->lines[index][a].state == INVALID){  //Tag match, state is INVALID
         if (action == ST_MISS || action == LD_MISS) { //STATE is INVALID, ACTION is ST_MISS or LD_MISS
-          upd_cache (cache, tag, index, a, action, false, INVALID, false);
+          //return upd_cache (cache, tag, index, a, action, false, INVALID, false);
+          return upd_cache (cache, tag, index, a, action, INVALID, false, false, false);
         }
         else if (action == STORE) { //STATE is INVALID, ACTION is STORE
-          upd_cache (cache, tag, index, cache->lru_way[index], action, false, MODIFIED, false);
+          //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, MODIFIED, false);
+          return upd_cache (cache, tag, index, a, action, MODIFIED, false, false, false);
         }
         else if (action == LOAD) { //STATE is INVALID, ACTION is LOAD
-          upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+          //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+          return upd_cache (cache, tag, index, a, action, SHARED, false, false, false);
         }
       }
       else if (cache->lines[index][a].state == MODIFIED) {  //Tag match, state is MODIFIED
         if (action == ST_MISS) { //STATE is MODIFIED, ACTION is ST_MISS
-          upd_cache (cache, tag, index, cache->lru_way[index], action, true, INVALID, false);
+          //return upd_cache (cache, tag, index, cache->lru_way[index], action, true, INVALID, false);
+          return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, true, true, false);
         }
         else if (action == LD_MISS) { //STATE is MODIFIED, ACTION is LD_MISS
-          upd_cache (cache, tag, index, cache->lru_way[index], action, true, SHARED, false);
+          //return upd_cache (cache, tag, index, cache->lru_way[index], action, true, SHARED, false);
+          return upd_cache (cache, tag, index, cache->lru_way[index], action, SHARED, true, true, false);
         }
         else if (action == STORE || action == LOAD) { //STATE is MODIFIED, ACTION is STORE or LOAD
-          upd_cache (cache, tag, index, a, action, false, MODIFIED, false);
+          //return upd_cache (cache, tag, index, a, action, false, MODIFIED, false);
+          return upd_cache (cache, tag, index, a, action, MODIFIED, false, false, false);
         }
       }
       else { //Tag match, state is SHARED
         if (action == ST_MISS) { //STATE is SHARED, ACTION is ST_MISS
-          upd_cache (cache, tag, index, cache->lru_way[index], action, true, INVALID, true);
+          //return upd_cache (cache, tag, index, cache->lru_way[index], action, true, INVALID, true);
+          return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, true, false, true);
         }
         else if (action == STORE){ //STATE is SHARED, ACTION is STORE
-          upd_cache (cache, tag, index, cache->lru_way[index], action, true, MODIFIED, true);
+          //return upd_cache (cache, tag, index, cache->lru_way[index], action, true, MODIFIED, true);
+          return upd_cache (cache, tag, index, cache->lru_way[index], action, MODIFIED, true, false, true);
         }
         else if (action == LD_MISS || action == LOAD) { //STATE is SHARED, ACTION is LD_MISS or LOAD
-          upd_cache (cache, tag, index, a, action, false, SHARED, false);
+          //return upd_cache (cache, tag, index, a, action, false, SHARED, false);
+          return upd_cache (cache, tag, index, a, action, SHARED, false, false, false);
         }
       }
     }
   }
   log_way(cache->lru_way[index]);
+  let bool dirty_evict = cache->lines[index][cache->lru_way[index]].dirty_f;
   if (cache->lines[index][cache->lru_way[index]].state == INVALID){  //No tag match, state is INVALID
     if (action == ST_MISS || action == LD_MISS) {
-      upd_cache (cache, tag, index, cache->lru_way[index], action, false, INVALID, false);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, INVALID, false);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, dirty_evict, false);
     }
     else if (action == STORE) {
-      upd_cache (cache, tag, index, cache->lru_way[index], action, false, MODIFIED, false);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, MODIFIED, false);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, MODIFIED, false, dirty_evict, false);
     }
     else if (action == LOAD) {
-      upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, SHARED, false, dirty_evict, false);
     }
   }
   else if (cache->lines[index][cache->lru_way[index]].state == MODIFIED) {  //No tag match, state is MODIFIED
     if (action == ST_MISS) {
-      upd_cache (cache, tag, index, cache->lru_way[index], action, false, INVALID, false);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, INVALID, false);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, dirty_evict, false);
     }
     else if (action == LD_MISS) {
-      upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, SHARED, false, dirty_evict, false);
     }
     else if (action == STORE || action == LOAD) {
-      upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, SHARED, false, dirty_evict, false);
     }
   }
   else { //No tag match, state is SHARED
     if (action == ST_MISS) {
-      upd_cache (cache, tag, index, cache->lru_way[index], action, true, INVALID, true);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, INVALID, true);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, dirty_evict, false);
     }
     else if (action == STORE){
-      upd_cache (cache, tag, index, cache->lru_way[index], action, false, MODIFIED, true);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, MODIFIED, true);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, MODIFIED, false, dirty_evict, false);
     }
     else if (action == LD_MISS || action == LOAD) {
-      upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+      //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
+      return upd_cache (cache, tag, index, cache->lru_way[index], action, SHARED, false, dirty_evict, false);
     }
   }
   return false;
