@@ -91,14 +91,16 @@ void update_lru(cache_t *cache, int the_set, int touched_way)
   }
 }
 
-void upd_cache (cache_t *cache, unsigned long tag, unsigned long index, int touched_way, enum action_t action, bool hit_f, enum state_t new_state, bool upgr_miss_f)
+bool upd_cache (cache_t *cache, unsigned long tag, unsigned long index, int touched_way, enum action_t action, bool hit_f, enum state_t new_state, bool upgr_miss_f)
 {
   log_way(touched_way);
   if (!hit_f && (action == STORE || action || LOAD)) {
     cache->lines[index][touched_way].tag = tag;
     update_stats(cache->stats, hit_f, cache->lines[index][cache->lru_way[index]].dirty_f, upgr_miss_f, action);
   }
-  else update_stats(cache->stats, hit_f, false, upgr_miss_f, action);
+  else {
+	  update_stats(cache->stats, hit_f, false, upgr_miss_f, action);
+  }
   cache->lines[index][touched_way].state = new_state;
   if (action == STORE) {
     cache->lines[index][touched_way].dirty_f = 1;  
@@ -106,7 +108,7 @@ void upd_cache (cache_t *cache, unsigned long tag, unsigned long index, int touc
   if (action == STORE || action == LOAD){
     update_lru(cache, index, touched_way);
   }
-  return hit;
+  return hit_f;
 }
 
 
@@ -153,7 +155,7 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
     }
   }
   log_way(cache->lru_way[index]);
-  if (cache->lines[index][a].state == INVALID){  //No tag match, state is INVALID
+  if (cache->lines[index][cache->lru_way[index]].state == INVALID){  //No tag match, state is INVALID
     if (action == ST_MISS || action == LD_MISS) {
       upd_cache (cache, tag, index, cache->lru_way[index], action, false, INVALID, false);
     }
@@ -164,7 +166,7 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
       upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
     }
   }
-  else if (cache->lines[index][a].state == MODIFIED) {  //No tag match, state is MODIFIED
+  else if (cache->lines[index][cache->lru_way[index]].state == MODIFIED) {  //No tag match, state is MODIFIED
     if (action == ST_MISS) {
       upd_cache (cache, tag, index, cache->lru_way[index], action, false, INVALID, false);
     }
@@ -186,6 +188,7 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
       upd_cache (cache, tag, index, cache->lru_way[index], action, false, SHARED, false);
     }
   }
+  return false;
 }
 
 /* this method takes a cache, an address, and an action
@@ -344,4 +347,5 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
   }
   return false;
 }
+return false;
 }
