@@ -126,7 +126,7 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
           else
           {
             log_way(cache->lru_way[index]);
-            update_stats(cache->stats, false, false, false, action);
+            update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
             cache->lines[index][a].state = INVALID;
             return false;
           }
@@ -139,16 +139,16 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
         {
           if (cache->protocol == NONE)
           {
+	    update_stats(cache->stats, true, false, false, action);
             cache->lines[index][a].dirty_f = 1;
             cache->lines[index][a].state = VALID;
-            update_stats(cache->stats, true, false, false, action);
             update_lru(cache, index, a);
           }
           else if (cache->protocol == VI)
           {
             if (cache->lines[index][a].state == VALID)
             {
-              update_stats(cache->stats, cache->lines[index][a].state == VALID, false, false, action);
+              update_stats(cache->stats, true, false, false, action);
               cache->lines[index][a].dirty_f = 1;
               cache->lines[index][a].state = VALID;
               update_lru(cache, index, a);
@@ -156,7 +156,7 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
             else
             {
               log_way(cache->lru_way[index]);
-              update_stats(cache->stats, false, false, false, action);
+              update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
               cache->lines[index][cache->lru_way[index]].dirty_f = 1;
               cache->lines[index][cache->lru_way[index]].state = VALID;
               cache->lines[index][cache->lru_way[index]].tag = tag;
@@ -184,8 +184,9 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
             else
             {
               log_way(cache->lru_way[index]);
-              update_stats(cache->stats, false, false, false, action);
-              cache->lines[index][cache->lru_way[index]].state = VALID;
+              update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
+              cache->lines[index][cache->lru_way[index]].dirty_f = 1;
+	      cache->lines[index][cache->lru_way[index]].state = VALID;
               cache->lines[index][cache->lru_way[index]].tag = tag;
               update_lru(cache, index, cache->lru_way[index]);
               return false;
@@ -201,11 +202,11 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
   {
     if (cache->protocol == NONE)
     {
-      update_stats(cache->stats, false, false, false, action);
+      update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
     }
     else if (cache->protocol == VI)
     {
-      update_stats(cache->stats, false, false, false, action);
+      update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
       cache->lines[index][cache->lru_way[index]].state = INVALID;
     }
   }
