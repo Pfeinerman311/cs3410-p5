@@ -120,15 +120,15 @@ bool vi_access (cache_t *cache, unsigned long addr, enum action_t action)
     if (tag == cache->lines[index][a].tag) {
       if (cache->lines[index][a].state == INVALID){  //Tag match, state is INVALID
         if (action == ST_MISS || action == LD_MISS) { //STATE is INVALID, ACTION is ST_MISS or LD_MISS
-            return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, cache->lines[index][cache->lru_way[index]].dirty_f, false);
+            return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, false, false);
         }
         else { //STATE is INVALID, ACTION is LOAD or STORE
-            return upd_cache (cache, tag, index, cache->lru_way[index], action, VALID, false, cache->lines[index][cache->lru_way[index]].dirty_f, false);
+            return upd_cache (cache, tag, index, cache->lru_way[index], action, VALID, false, false, false);
         }
       }
       else { //Tag match, state is VALID
-        if (action == ST_MISS || action == LD_MISS) { //STATE is VALID, ACTION is ST_MISS
-            return upd_cache (cache, tag, index, a, action, INVALID, true, cache->lines[index][cache->lru_way[index]].dirty_f, false);
+        if (action == ST_MISS || action == LD_MISS) { //STATE is VALID, ACTION is ST_MISS or LD_MISS
+            return upd_cache (cache, tag, index, a, action, INVALID, true, cache->lines[index][a].dirty_f, false);
         }
         else { //STATE is VALID, ACTION is LOAD or STORE
             return upd_cache (cache, tag, index, a, action, VALID, true, false, false);
@@ -136,10 +136,10 @@ bool vi_access (cache_t *cache, unsigned long addr, enum action_t action)
     }
   }
   }
-  bool dirty_evict = cache->lines[index][cache->lru_way[index]].dirty_f;
+  bool dirty_evict = cache->lines[index][cache->lru_way[index]].dirty_f == 1;
   if (cache->lines[index][cache->lru_way[index]].state == INVALID){  //No tag match, state is INVALID
     if (action == ST_MISS || action == LD_MISS) {
-        return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, false, false);
+        return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, dirty_evict, false);
     }
     else { //Action is LOAD or STORE
         return upd_cache (cache, tag, index, cache->lru_way[index], action, VALID, false, dirty_evict, false);
