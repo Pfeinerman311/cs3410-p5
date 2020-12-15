@@ -95,14 +95,16 @@ bool upd_cache (cache_t *cache, unsigned long tag, unsigned long index, int touc
   enum state_t new_state, bool hit_f, bool dirty_evict, bool upgr_miss_f)
 {
   log_way(touched_way);
-  if (!hit_f && action || LOAD) cache->lines[index][touched_way].tag = tag;
-	update_stats(cache->stats, hit_f, false, upgr_miss_f, action);
+  if (!hit_f) {
+	  cache->lines[index][touched_way].tag = tag;
+  }
+  update_stats(cache->stats, hit_f, dirty_evict, upgr_miss_f, action);
   cache->lines[index][touched_way].state = new_state;
   if (action == STORE) {
     cache->lines[index][touched_way].dirty_f = 1;
     update_lru(cache, index, touched_way);
   }
-  else if (action == LOAD){
+  else if (action == LOAD && !hit_f){
     cache->lines[index][touched_way].dirty_f = 0;
     update_lru(cache, index, touched_way);
   }
@@ -278,6 +280,7 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
       return upd_cache (cache, tag, index, a, action, VALID, true, false, false);
     }
   }
-  bool dirty_evict = cache->lines[index][cache->lru_way[index]].dirty_f;
+  bool dirty_evict = cache->lines[index][cache->lru_way[index]].dirty_f == 1;
+  if (action == ST_MISS || action == LD_MISS) dirty_evict = false;
   return upd_cache (cache, tag, index, cache->lru_way[index], action, VALID, false, dirty_evict, false);
 }
