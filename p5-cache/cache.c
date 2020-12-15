@@ -261,9 +261,11 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
 {
   // FIX THIS CODE!
   if (cache->protocol == MSI) {
-    msi_access (cache, addr, action);
+    return msi_access (cache, addr, action);
   }
-  else {
+  else if (cache->protocol == VI) {
+    return vi_access (cache, addr, action);
+  }
   unsigned long tag = get_cache_tag(cache, addr);
   unsigned long index = get_cache_index(cache, addr);
   log_set(index);
@@ -271,139 +273,9 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
   {
     if (tag == cache->lines[index][a].tag)
     {
-      log_way(a);
-      if (action == LD_MISS || action == ST_MISS) //When there is a tag match but action is a snoop
-      {
-        if (cache->protocol == NONE)
-        {
-          update_stats(cache->stats, true, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
-        }
-        else if (cache->protocol == VI)
-        {
-          if (cache->lines[index][a].state == VALID)
-          {
-            update_stats(cache->stats, true, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
-            cache->lines[index][a].state = INVALID;
-          }
-          else
-          {
-            log_way(cache->lru_way[index]);
-            update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
-            cache->lines[index][a].state = INVALID;
-            return false;
-          }
-        }
-      }
-      else //When there is a tag match but action isn't a snoop
-      {
-        //update_stats(cache->stats, true, cache->lines[index][a].dirty_f, false, action);
-        if (action == STORE)
-        {
-          if (cache->protocol == NONE)
-          {
-            update_stats(cache->stats, true, false, false, action);
-            cache->lines[index][a].dirty_f = 1;
-            cache->lines[index][a].state = VALID;
-            update_lru(cache, index, a);
-          }
-          else if (cache->protocol == VI)
-          {
-            if (cache->lines[index][a].state == VALID)
-            {
-              update_stats(cache->stats, true, false, false, action);
-              cache->lines[index][a].dirty_f = 1;
-              cache->lines[index][a].state = VALID;
-              update_lru(cache, index, a);
-            }
-            else
-            {
-              log_way(cache->lru_way[index]);
-              update_stats(cache->stats, false, false, false, action);
-              cache->lines[index][cache->lru_way[index]].dirty_f = 1;
-              cache->lines[index][cache->lru_way[index]].state = VALID;
-              cache->lines[index][cache->lru_way[index]].tag = tag;
-              update_lru(cache, index, cache->lru_way[index]);
-              return false;
-            }
-          }
-        }
-        else
-        {
-          if (cache->protocol == NONE)
-          {
-            cache->lines[index][a].state = VALID;
-            update_stats(cache->stats, true, false, false, action);
-            update_lru(cache, index, a);
-          }
-          else if (cache->protocol == VI)
-          {
-            if (cache->lines[index][a].state == VALID)
-            {
-              update_stats(cache->stats, cache->lines[index][a].state == VALID, false, false, action);
-              cache->lines[index][a].state = VALID;
-              update_lru(cache, index, a);
-            }
-            else
-            {
-              log_way(cache->lru_way[index]);
-              update_stats(cache->stats, false, false, false, action);
-              cache->lines[index][cache->lru_way[index]].state = VALID;
-              cache->lines[index][cache->lru_way[index]].tag = tag;
-              //cache->lines[index][cache->lru_way[index]].dirty_f = 1;
-              update_lru(cache, index, cache->lru_way[index]);
-              return false;
-            }
-          }
-        }
-      }
-      return true;
+      return upd_cache (cache, tag, index, a, action, VALID, true, false, false);
     }
   }
-  log_way(cache->lru_way[index]);
-  update_stats(cache->stats, false, cache->lines[index][cache->lru_way[index]].dirty_f, false, action);
-  if (action == LD_MISS || action == ST_MISS) //Full cache is checked but no tag match, action is a snoop
-  {
-    if (cache->protocol == NONE)
-    {
-      update_stats(cache->stats, false, false, false, action);
-    }
-    else if (cache->protocol == VI)
-    {
-      update_stats(cache->stats, false, false, false, action);
-      cache->lines[index][cache->lru_way[index]].state = INVALID;
-    }
-  }
-  else //Full cache is checked but no tag match, action isn't a snoop
-  {
-    cache->lines[index][cache->lru_way[index]].tag = tag;
-    if (action == STORE)
-    {
-      if (cache->protocol == NONE)
-      {
-        cache->lines[index][cache->lru_way[index]].dirty_f = 1;
-        //cache->lines[index][cache->lru_way[index]].state = VALID;
-      }
-      else if (cache->protocol == VI)
-      {
-        cache->lines[index][cache->lru_way[index]].dirty_f = 1;
-        cache->lines[index][cache->lru_way[index]].state = VALID;
-      }
-    }
-    else if (action == LOAD)
-    {
-      if (cache->protocol == NONE)
-      {
-        cache->lines[index][cache->lru_way[index]].dirty_f = 0;
-      }
-      else if (cache->protocol == VI)
-      {
-        cache->lines[index][cache->lru_way[index]].dirty_f = 0;
-        cache->lines[index][cache->lru_way[index]].state = VALID;
-      }
-    }
-    update_lru(cache, index, cache->lru_way[index]);
-  }
-  return false;
-}
-return false;
+  bool dirty_evict = cache->lines[index][cache->lru_way[index]].dirty_f;
+  return upd_cache (cache, tag, index, cache->lru_way[index], action, VALID, false, dirty_evict, false);
 }
