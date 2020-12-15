@@ -118,8 +118,18 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
         }
         else if (cache->protocol == VI)
         {
-          update_stats(cache->stats, cache->lines[index][a].state == VALID, false, false, action);
-          cache->lines[index][a].state = INVALID;
+          if (cache->lines[index][a].state == VALID)
+          {
+            update_stats(cache->stats, cache->lines[index][a].state == VALID, false, false, action);
+            cache->lines[index][a].state = INVALID;
+          }
+          else
+          {
+            log_way(cache->lru_way[index]);
+            update_stats(cache->stats, false, false, false, action);
+            cache->lines[index][a].state = INVALID;
+            return false;
+          }
         }
       }
       else //When there is a tag match but action isn't a snoop
@@ -131,15 +141,57 @@ bool access_cache(cache_t *cache, unsigned long addr, enum action_t action)
           {
             cache->lines[index][a].dirty_f = 1;
             cache->lines[index][a].state = VALID;
+            update_stats(cache->stats, true, false, false, action);
+            update_lru(cache, index, a);
           }
           else if (cache->protocol == VI)
           {
-            cache->lines[index][a].dirty_f = 1;
-            cache->lines[index][a].state = VALID;
+            if (cache->lines[index][a].state == VALID)
+            {
+              update_stats(cache->stats, cache->lines[index][a].state == VALID, false, false, action);
+              cache->lines[index][a].dirty_f = 1;
+              cache->lines[index][a].state = VALID;
+              update_lru(cache, index, a);
+            }
+            else
+            {
+              log_way(cache->lru_way[index]);
+              update_stats(cache->stats, false, false, false, action);
+              cache->lines[index][cache->lru_way[index]].dirty_f = 1;
+              cache->lines[index][cache->lru_way[index]].state = VALID;
+              cache->lines[index][cache->lru_way[index]].tag = tag;
+              update_lru(cache, index, cache->lru_way[index]);
+              return false;
+            }
           }
         }
-        update_lru(cache, index, a);
-	update_stats(cache->stats, true, false, false, action);
+        else
+        {
+          if (cache->protocol == NONE)
+          {
+            cache->lines[index][a].state = VALID;
+            update_stats(cache->stats, true, false, false, action);
+            update_lru(cache, index, a);
+          }
+          else if (cache->protocol == VI)
+          {
+            if (cache->lines[index][a].state == VALID)
+            {
+              update_stats(cache->stats, cache->lines[index][a].state == VALID, false, false, action);
+              cache->lines[index][a].state = VALID;
+              update_lru(cache, index, a);
+            }
+            else
+            {
+              log_way(cache->lru_way[index]);
+              update_stats(cache->stats, false, false, false, action);
+              cache->lines[index][cache->lru_way[index]].state = VALID;
+              cache->lines[index][cache->lru_way[index]].tag = tag;
+              update_lru(cache, index, cache->lru_way[index]);
+              return false;
+            }
+          }
+        }
       }
       return true;
     }
