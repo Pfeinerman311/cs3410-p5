@@ -165,7 +165,7 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
       if (cache->lines[index][a].state == INVALID){  //Tag match, state is INVALID
         if (action == ST_MISS || action == LD_MISS) { //STATE is INVALID, ACTION is ST_MISS or LD_MISS
           //return upd_cache (cache, tag, index, a, action, false, INVALID, false);
-          return upd_cache (cache, tag, index, a, action, INVALID, false, false, false);
+          return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, false, false);
         }
         else if (action == STORE) { //STATE is INVALID, ACTION is STORE
           //return upd_cache (cache, tag, index, cache->lru_way[index], action, false, MODIFIED, false);
@@ -179,11 +179,11 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
       else if (cache->lines[index][a].state == MODIFIED) {  //Tag match, state is MODIFIED
         if (action == ST_MISS) { //STATE is MODIFIED, ACTION is ST_MISS
           //return upd_cache (cache, tag, index, cache->lru_way[index], action, true, INVALID, false);
-          return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, false, true, false);
+          return upd_cache (cache, tag, index, a, action, INVALID, true, true, false);
         }
         else if (action == LD_MISS) { //STATE is MODIFIED, ACTION is LD_MISS
           //return upd_cache (cache, tag, index, cache->lru_way[index], action, true, SHARED, false);
-          return upd_cache (cache, tag, index, a, action, SHARED, false, true, false);
+          return upd_cache (cache, tag, index, a, action, SHARED, true, true, false);
         }
         else if (action == STORE || action == LOAD) { //STATE is MODIFIED, ACTION is STORE or LOAD
           //return upd_cache (cache, tag, index, a, action, false, MODIFIED, false);
@@ -193,7 +193,7 @@ bool msi_access (cache_t *cache, unsigned long addr, enum action_t action)
       else { //Tag match, state is SHARED
         if (action == ST_MISS) { //STATE is SHARED, ACTION is ST_MISS
           //return upd_cache (cache, tag, index, cache->lru_way[index], action, true, INVALID, true);
-          return upd_cache (cache, tag, index, cache->lru_way[index], action, INVALID, true, false, false);
+          return upd_cache (cache, tag, index, a, action, INVALID, true, false, false);
         }
         else if (action == STORE){ //STATE is SHARED, ACTION is STORE
           //return upd_cache (cache, tag, index, cache->lru_way[index], action, true, MODIFIED, true);
