@@ -75,7 +75,7 @@ void calculate_stat_rates(cache_stats_t *stats, int block_size)
   // FIX THIS CODE!
   // you will need to modify this function in order to properly
   // calculate wb and wt data
-  stats->B_written_to_cache = (stats->total_cpu_accesses - stats->total_hits) * block_size;
+  stats->B_written_to_cache = (stats->total_cpu_accesses - stats->total_hits - stats->total_upgrade_miss) * block_size;
   stats->B_written_to_bus_wb = stats->total_dirty_evics * block_size;
   stats->B_written_to_bus_wt = 4 * stats->total_stores;
   stats->total_traffic_wb = stats->B_written_to_cache + stats->B_written_to_bus_wb;
