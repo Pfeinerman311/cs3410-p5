@@ -23,7 +23,7 @@ cache_t *make_cache(int capacity, int block_size, int assoc, enum protocol_t pro
   cache->n_set = capacity / (assoc * block_size);
   cache->n_offset_bit = log2(block_size);
   cache->n_index_bit = log2(cache->n_set);
-  cache->n_tag_bit = 32 - (cache->n_offset_bit) - (cache->n_index_bit);
+  cache->n_tag_bit = ADDRESS_SIZE - (cache->n_offset_bit) - (cache->n_index_bit);
 
   // next create the cache lines and the array of LRU bits
   // - malloc an array with n_rows
@@ -120,7 +120,7 @@ bool vi_access(cache_t *cache, unsigned long addr, enum action_t action)
       {
         if (action == ST_MISS || action == LD_MISS) //STATE is INVALID, ACTION is ST_MISS or LD_MISS
         {
-          return upd_cache(cache, tag, index, cache->lru_way[index], action, INVALID, false, false, false);
+          return upd_cache(cache, tag, index, cache->lru_way[index], action, INVALID, HIT, false, false);
         }
         else //STATE is INVALID, ACTION is LOAD or STORE
         {
