@@ -1,41 +1,4 @@
-Skip to content
- Enterprise
-Search or jump to…
-
-Pull requests
-Issues
-Explore
- 
-@pjf73 
-Please read the Github Guide for Cornell Users.
-
-Learn Git and GitHub without any code!
-Using the Hello World guide, you’ll start a branch, write comments, and open a pull request.
-
-
-cs3410-2020fa-student
-/
-lak254-nmm85-pjf73
-Private
-1
-00
-Code
-Issues
-Pull requests
-Projects
-Wiki
-Insights
-lak254-nmm85-pjf73/p5-cache/cache.c
-@pjf73
-pjf73 Update cache.c
-…
-Latest commit ce8b12a 11 minutes ago
- History
- 2 contributors
-@pjf73@nmm85
-305 lines (290 sloc)  10.8 KB
-  
-#include <stdio.h>
+ #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
