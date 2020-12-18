@@ -207,7 +207,7 @@ bool msi_access(cache_t *cache, unsigned long addr, enum action_t action)
       else //TAG MATCH, STATE is SHARED
       {
         if (action == ST_MISS) //STATE is SHARED, ACTION is ST_MISS
-        {S
+        {
           return upd_cache(cache, tag, index, a, action, INVALID, true, false, false);
         }
         else if (action == STORE)  //STATE is SHARED, ACTION is STORE
